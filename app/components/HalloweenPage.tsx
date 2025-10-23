@@ -1,5 +1,6 @@
 "use client";
 import React, { useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import StarfieldBackground from "./Background";
 
 type ToastType = "ok" | "error";
@@ -7,6 +8,8 @@ type ToastType = "ok" | "error";
 const HalloweenRSVP: React.FC = () => {
   const [nombre, setNombre] = useState("");
   const [personas, setPersonas] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
     type: ToastType;
@@ -47,6 +50,8 @@ const HalloweenRSVP: React.FC = () => {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("submiting");
+    
     if (!validateName(nombre)) {
       showToast("El nombre debe tener entre 2 y 50 caracteres.", "error");
       return;
@@ -55,8 +60,14 @@ const HalloweenRSVP: React.FC = () => {
       showToast("Indica un número de personas entre 1 y 20.", "error");
       return;
     }
+    console.log("validate");
+    
+
+    setIsLoading(true);
 
     try {
+      console.log("sending");
+      
       await fetch(
         `/api/confirm?name=${encodeURIComponent(
           nombre
@@ -66,16 +77,20 @@ const HalloweenRSVP: React.FC = () => {
           headers: { "Content-Type": "application/json" },
         }
       );
+      console.log("sent");
+      
+      setIsLoading(false);
+      setIsSubmitted(true);
     } catch (error) {
       console.error(error);
+      setIsLoading(false);
       showToast("Error al confirmar asistencia. Intenta nuevamente.", "error");
       return;
     }
+  };
 
-    showToast(
-      "¡Asistencia confirmada! Nos vemos en la noche más espeluznante 🎃",
-      "ok"
-    );
+  const resetForm = () => {
+    setIsSubmitted(false);
     setNombre("");
     setPersonas("");
   };
@@ -121,7 +136,7 @@ const HalloweenRSVP: React.FC = () => {
           {/* Glow orbs */}
           <div
             aria-hidden
-            className="absolute -right-[30%] -bottom-[30%] w-[360px] h-[360px] rounded-full"
+            className="absolute -right-[30%] -bottom-[30%] w-[360px] h-[360px] rounded-full pointer-events-none z-0"
             style={{
               background:
                 "radial-gradient(closest-side, rgba(255,106,0,0.12), transparent)",
@@ -131,7 +146,7 @@ const HalloweenRSVP: React.FC = () => {
           />
           <div
             aria-hidden
-            className="absolute -left-[30%] -top-[30%] w-[360px] h-[360px] rounded-full"
+            className="absolute -left-[30%] -top-[30%] w-[360px] h-[360px] rounded-full pointer-events-none z-0"
             style={{
               background:
                 "radial-gradient(closest-side, rgba(200,30,30,0.14), transparent)",
@@ -189,7 +204,7 @@ const HalloweenRSVP: React.FC = () => {
             ))}
           </div>
 
-          <header className="flex items-center gap-4 mb-4">
+          <header className="flex items-center gap-4 mb-4 relative z-10">
             <div
               className="w-14 h-14 grid place-items-center rounded-xl border border-white/10 shadow-inner"
               style={{
@@ -288,60 +303,111 @@ const HalloweenRSVP: React.FC = () => {
 
           <div className="h-px my-4 bg-linear-to-r from-transparent via-white/10 to-transparent" />
 
-          <form onSubmit={onSubmit} noValidate className="grid gap-3">
-            <div className="grid sm:grid-cols-[1.2fr_.8fr] gap-3">
-              <div className="grid gap-2">
-                <div className="flex justify-between items-center">
-                  <label htmlFor="nombre" className="text-sm text-muted">
-                    Nombre
-                  </label>
-                  <span className="text-xs text-muted">
-                    {nombre.length}/50
-                  </span>
+          {isSubmitted ? (
+            // Mensaje de confirmación
+            <div className="text-center py-8 relative z-10">
+              <div className="mb-6">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[var(--success)] to-[#16a34a] flex items-center justify-center">
+                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
                 </div>
-                <input
-                  id="nombre"
-                  name="nombre"
-                  type="text"
-                  placeholder="Ej. Ana Romero"
-                  autoComplete="name"
-                  required
-                  maxLength={50}
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  className="px-3.5 py-3 rounded-xl border border-white/10 bg-white/5 placeholder-[#8f8fa4] outline-none transition focus:border-[rgba(255,179,0,0.5)] focus:ring-4 focus:ring-[rgba(255,179,0,0.08)]"
-                />
+                <h3 
+                  className="text-2xl font-bold mb-2"
+                  style={{
+                    fontFamily: '"Creepster", cursive',
+                    color: "#ffd27a",
+                    textShadow: "0 0 12px rgba(255,179,0,0.4)"
+                  }}
+                >
+                  ¡Alma Registrada! 👻
+                </h3>
+                <p className="text-lg text-[var(--text)] mb-2">
+                  Tu presencia ha sido confirmada para la noche más espeluznante
+                </p>
+                <p className="text-muted text-sm">
+                  Nos vemos el 1 de noviembre... ¡Trae tu mejor disfraz! 🎃
+                </p>
               </div>
-              <div className="grid gap-2">
-                <label htmlFor="personas" className="text-sm text-muted">
-                  Número de personas
-                </label>
-                <input
-                  id="personas"
-                  name="personas"
-                  type="number"
-                  min={1}
-                  max={20}
-                  step={1}
-                  placeholder="Ej. 2"
-                  required
-                  value={personas}
-                  onChange={(e) => setPersonas(e.target.value)}
-                  className="px-3.5 py-3 rounded-xl border border-white/10 bg-white/5 placeholder-[#8f8fa4] outline-none transition focus:border-[rgba(255,179,0,0.5)] focus:ring-4 focus:ring-[rgba(255,179,0,0.08)]"
-                />
+              
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={resetForm}
+                  className="px-6 py-3 rounded-xl border border-white/20 bg-white/5 text-[var(--text)] hover:bg-white/10 transition-all font-medium"
+                >
+                  Registrar otra persona
+                </button>
               </div>
             </div>
+          ) : (
+            <form onSubmit={onSubmit} noValidate className="grid gap-3 relative z-10">
+              <div className="grid sm:grid-cols-[1.2fr_.8fr] gap-3">
+                <div className="grid gap-2">
+                  <div className="flex justify-between items-center">
+                    <label htmlFor="nombre" className="text-sm text-muted">
+                      Nombre
+                    </label>
+                    <span className="text-xs text-muted">
+                      {nombre.length}/50
+                    </span>
+                  </div>
+                  <input
+                    id="nombre"
+                    name="nombre"
+                    type="text"
+                    placeholder="Ej. Ana Romero"
+                    autoComplete="name"
+                    required
+                    maxLength={50}
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
+                    disabled={isLoading}
+                    className="px-3.5 py-3 rounded-xl border border-white/10 bg-white/5 placeholder-[#8f8fa4] outline-none transition focus:border-[rgba(255,179,0,0.5)] focus:ring-4 focus:ring-[rgba(255,179,0,0.08)] disabled:opacity-50"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="personas" className="text-sm text-muted">
+                    Número de personas
+                  </label>
+                  <input
+                    id="personas"
+                    name="personas"
+                    type="number"
+                    min={1}
+                    max={20}
+                    step={1}
+                    placeholder="Ej. 2"
+                    required
+                    value={personas}
+                    onChange={(e) => setPersonas(e.target.value)}
+                    disabled={isLoading}
+                    className="px-3.5 py-3 rounded-xl border border-white/10 bg-white/5 placeholder-[#8f8fa4] outline-none transition focus:border-[rgba(255,179,0,0.5)] focus:ring-4 focus:ring-[rgba(255,179,0,0.08)] disabled:opacity-50"
+                  />
+                </div>
+              </div>
 
-            <button
-              type="submit"
-              className="mt-1 rounded-xl font-bold text-black px-4 py-3 shadow-[0_8px_24px_rgba(255,106,0,0.28)] bg-linear-to-b from-[#ff6a00] to-[#e65c00] active:translate-y-px hover:brightness-105"
-            >
-              Confirmar asistencia
-            </button>
-            <p className="text-muted text-xs sm:text-sm">
-              Gracias por confirmar. ¡Trae tu mejor disfraz! 🎃
-            </p>
-          </form>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="mt-1 rounded-xl cursor-pointer font-bold text-black px-4 py-3 shadow-[0_8px_24px_rgba(255,106,0,0.28)] bg-linear-to-b from-[#ff6a00] to-[#e65c00] hover:brightness-105 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin w-5 h-5 border-2 border-black border-t-transparent rounded-full" />
+                    Invocando espíritus...
+                  </>
+                ) : (
+                  "Confirmar asistencia"
+                )}
+              </button>
+              
+              {!isLoading && (
+                <p className="text-muted text-xs sm:text-sm">
+                  Gracias por confirmar. ¡Trae tu mejor disfraz! 🎃
+                </p>
+              )}
+            </form>
+          )}
 
           <footer className="flex items-center justify-between gap-2 text-muted text-xs mt-2">
             <span>Se aceptan bolsas de dulces y mucho pisto</span>
