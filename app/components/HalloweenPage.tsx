@@ -39,7 +39,7 @@ const HalloweenRSVP: React.FC = () => {
     toastTimer.current = window.setTimeout(() => setToast(null), 3500);
   };
 
-  const validateName = (v: string) => v.trim().length >= 2;
+  const validateName = (v: string) => v.trim().length >= 2 && v.trim().length <= 50;
   const validateCount = (v: string) => {
     const n = Number(v);
     return Number.isInteger(n) && n >= 0;
@@ -48,7 +48,7 @@ const HalloweenRSVP: React.FC = () => {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateName(nombre)) {
-      showToast("Por favor, escribe un nombre válido.", "error");
+      showToast("El nombre debe tener entre 2 y 50 caracteres.", "error");
       return;
     }
     if (!validateCount(personas)) {
@@ -291,9 +291,14 @@ const HalloweenRSVP: React.FC = () => {
           <form onSubmit={onSubmit} noValidate className="grid gap-3">
             <div className="grid sm:grid-cols-[1.2fr_.8fr] gap-3">
               <div className="grid gap-2">
-                <label htmlFor="nombre" className="text-sm text-muted">
-                  Nombre
-                </label>
+                <div className="flex justify-between items-center">
+                  <label htmlFor="nombre" className="text-sm text-muted">
+                    Nombre
+                  </label>
+                  <span className="text-xs text-muted">
+                    {nombre.length}/50
+                  </span>
+                </div>
                 <input
                   id="nombre"
                   name="nombre"
@@ -301,6 +306,7 @@ const HalloweenRSVP: React.FC = () => {
                   placeholder="Ej. Ana Romero"
                   autoComplete="name"
                   required
+                  maxLength={50}
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                   className="px-3.5 py-3 rounded-xl border border-white/10 bg-white/5 placeholder-[#8f8fa4] outline-none transition focus:border-[rgba(255,179,0,0.5)] focus:ring-4 focus:ring-[rgba(255,179,0,0.08)]"
